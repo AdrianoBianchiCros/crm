@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Funil de Prospecção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: barra de métricas no topo, abas (Funil / Lista / Follow-ups), gaveta lateral para o lead */
+:root{
+  --bg:#f3f5f6; --surface:#ffffff; --surface-2:#eaeef0; --line:#d6dde1;
+  --fg:#16222a; --muted:#5b6b75; --accent:#0f6b6e; --accent-fg:#ffffff; --accent-soft:#d7ecec;
+  --warn:#a05a00; --warn-soft:#fbecd6; --bad:#b3261e; --bad-soft:#f9dedb; --good:#1d7a3e; --good-soft:#dcf1e2;
+  --shadow:0 10px 30px rgba(15,40,50,.14);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1619; --surface:#172126; --surface-2:#1f2c32; --line:#2c3b42;
+  --fg:#e3eaed; --muted:#93a4ad; --accent:#4fb3b0; --accent-fg:#06201f; --accent-soft:#163a3b;
+  --warn:#f0b35a; --warn-soft:#3a2a12; --bad:#f28b82; --bad-soft:#3d1c1a; --good:#7bd39a; --good-soft:#14301e;
+  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1619; --surface:#172126; --surface-2:#1f2c32; --line:#2c3b42;
+  --fg:#e3eaed; --muted:#93a4ad; --accent:#4fb3b0; --accent-fg:#06201f; --accent-soft:#163a3b;
+  --warn:#f0b35a; --warn-soft:#3a2a12; --bad:#f28b82; --bad-soft:#3d1c1a; --good:#7bd39a; --good-soft:#14301e;
+  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+h1{font-size:26px;font-weight:700;letter-spacing:-.01em}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.sub{color:var(--muted);margin:2px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+button:hover,.btn:hover{border-color:var(--accent)}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.ghost{background:transparent}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:90px}
+label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em;display:flex;flex-direction:column;gap:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:var(--f-mono);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.stat.alert b{color:var(--bad)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;padding:10px 12px;color:var(--muted)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tab .n{font-family:var(--f-mono);font-size:11px;background:var(--surface-2);border-radius:99px;padding:1px 7px}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters input{max-width:320px}.filters select{max-width:200px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--surface-2);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.col.drop{outline:2px dashed var(--accent);outline-offset:-4px}
+.col h3{font-size:14px;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+.col h3 .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card:hover{border-color:var(--accent)}
+.card .name{font-weight:600;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:var(--muted);font-size:12px}
+.chip{font-size:11px;font-weight:600;border-radius:99px;padding:2px 8px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.hot{background:var(--warn-soft);color:var(--warn)}
+.chip.due{background:var(--bad-soft);color:var(--bad)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--surface-2);position:sticky;top:0}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--surface-2)}
+.pager{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-top:12px}
+.pager button{min-width:38px;justify-content:center}.pager button:disabled{opacity:.45;cursor:default}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:32px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.empty h2{color:var(--fg);font-size:18px}
+.scrim{position:fixed;inset:0;background:rgba(10,20,25,.4);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);box-shadow:var(--shadow);z-index:21;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 18px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+.drawer header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.drawer h2{font-size:20px;overflow-wrap:anywhere}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.box h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--f-body);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.grid2{grid-template-columns:1fr}}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
+dt{color:var(--muted);font-size:12px}dd{margin:0;overflow-wrap:anywhere}
+.argument{background:var(--warn-soft);color:var(--fg);border-radius:8px;padding:10px;border-left:3px solid var(--warn)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hist li{border-left:2px solid var(--line);padding-left:10px}
+.hist .when{font-size:11px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:40;font-weight:600}
+.banner{background:var(--accent-soft);border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.notice{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:10px 12px}
+a{color:var(--accent)}
+body.locked .wrap,body.locked #drawerRoot{display:none}
+.auth{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:16px}
+.authbox{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:28px 24px;display:flex;flex-direction:column;gap:14px}
+.authbox h1{margin:0 0 4px}
+.authbox .primary{justify-content:center;padding:10px 12px}
+.pwrow{display:flex;gap:6px}.pwrow button{padding:6px 10px;font-size:13px;flex:none}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}}}
+</style>
+</head>
+<body class="locked">
+<div id="authRoot"></div>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Funil de Prospecção</h1>
+      <p class="sub">Massagistas · Guarulhos/SP · oferta: sites que transformam visitas em clientes</p>
+    </div>
+    <div class="actions">
+      <label class="btn" for="csvInput" style="flex-direction:row;font-size:14px;color:var(--fg)">Importar CSV</label>
+      <input type="file" id="csvInput" accept=".csv,text/csv" hidden>
+      <button id="exportBtn">Exportar CSV</button>
+      <button id="promptsBtn" class="ghost">Prompts</button>
+      <button id="settingsBtn" class="ghost">Assinatura</button>
+      <button id="usersBtn" class="ghost">Usuários</button>
+      <span class="sub" id="userName"></span>
+      <button id="logoutBtn" class="ghost">Sair</button>
+    </div>
+  </div>
+
+  <div id="notice" class="notice" hidden></div>
+  <div id="importBanner" class="banner" hidden></div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="funil" aria-selected="true">Funil</button>
+    <button class="tab" role="tab" data-view="lista" aria-selected="false">Lista</button>
+    <button class="tab" role="tab" data-view="hoje" aria-selected="false">Follow-ups <span class="n" id="dueCount">0</span></button>
+  </div>
+
+  <div class="filters">
+    <input id="q" type="search" placeholder="Buscar por nome, bairro, telefone…" aria-label="Buscar">
+    <select id="fType" aria-label="Filtrar por abordagem"><option value="">Todas as abordagens</option></select>
+  </div>
+
+  <div id="main"></div>
+</div>
+
+<div id="drawerRoot"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js?v=5"></script>
+</body>
+</html>

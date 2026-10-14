@@ -1,0 +1,6 @@
+DirectoryIndex index.html
+Options -Indexes
+
+<FilesMatch "^(config\.php|schema\.sql|prompt-inicial\.txt)$">
+  Require all denied
+</FilesMatch>
